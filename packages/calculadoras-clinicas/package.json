@@ -1,0 +1,66 @@
+{
+  "name": "@precisa-saude/calculadoras-clinicas",
+  "version": "0.0.0",
+  "description": "Calculadoras clínicas — PhenoAge, BrDMrisc, biomarcadores derivados e índices clínicos (FIB-4, APRI, FLI, AIP, Castelli, ASCVD, TyG, HOMA-IR, eGFR, SII, NLR)",
+  "keywords": [
+    "phenoage",
+    "brdmrisc",
+    "homa-ir",
+    "fib-4",
+    "ascvd",
+    "egfr",
+    "clinical-calculator"
+  ],
+  "homepage": "https://github.com/Precisa-Saude/calculadoras-clinicas/tree/main/packages/calculadoras-clinicas#readme",
+  "bugs": "https://github.com/Precisa-Saude/calculadoras-clinicas/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Precisa-Saude/calculadoras-clinicas.git",
+    "directory": "packages/calculadoras-clinicas"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./indices": {
+      "import": {
+        "types": "./dist/indices/index.d.ts",
+        "default": "./dist/indices/index.js"
+      },
+      "require": {
+        "types": "./dist/indices/index.d.cts",
+        "default": "./dist/indices/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist .turbo",
+    "lint": "eslint src/ --max-warnings 0",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,45 @@
+name: CI/CD
+
+# Orchestrator — wires reusable workflows. See
+# tooling/templates/github/workflows/ci.yml for the canonical shape.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  # `contents: write` because _release.yml (reusable) needs to create
+  # commits and tags via semantic-release. Reusable workflows can only
+  # request permissions the caller also grants.
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    uses: ./.github/workflows/_checks.yml
+    secrets: inherit
+
+  release:
+    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    uses: ./.github/workflows/_release.yml
+    secrets: inherit
+
+  publish:
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    uses: ./.github/workflows/_publish.yml
+    with:
+      release_sha: ${{ needs.release.outputs.release_sha }}
+      packages: |
+        packages/calculadoras-clinicas
+    secrets: inherit
