@@ -1,6 +1,6 @@
 {
   "name": "@precisa-saude/calculadoras-clinicas",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Calculadoras clínicas — PhenoAge, BrDMrisc, biomarcadores derivados e índices clínicos (FIB-4, APRI, FLI, AIP, Castelli, ASCVD, TyG, HOMA-IR, eGFR, SII, NLR)",
   "keywords": [
     "phenoage",
