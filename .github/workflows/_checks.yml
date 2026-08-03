@@ -1,7 +1,12 @@
 name: CI Checks
 
-# Reusable workflow — parallel CI checks. Mirrors the canonical template
-# in tooling/templates/github/workflows/_checks.yml.
+# Reusable workflow — parallel CI checks. Each concern runs as its own
+# job so feedback is fast: a lint failure doesn't wait for the test
+# suite. Called by the repo's `ci.yml` orchestrator.
+#
+# Each repo MAY add extra checks (e.g. FHIR IG compile, benchmark
+# invariant scripts) by inlining additional jobs here after sync, or
+# in a separate workflow if the check is big enough to warrant it.
 
 on:
   workflow_call:
@@ -94,4 +99,4 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run build
-      - run: pnpm turbo run test:coverage
+      - run: pnpm turbo run test
