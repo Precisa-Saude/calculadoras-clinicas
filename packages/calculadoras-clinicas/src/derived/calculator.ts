@@ -87,6 +87,30 @@ const CONTEXT_CALCULATIONS: ContextCalculationDef[] = [
     unit: 'kg/m2',
     validate: (v) => v.get('TotalMass')! > 0,
   },
+  // Massa muscular normalizada pela altura, para a medida ser comparável
+  // entre pessoas de estaturas diferentes e ao longo do tempo. É o mesmo
+  // ajuste que o IMC faz com o peso.
+  //
+  // NÃO tem faixa de referência associada, e a razão é específica: os cortes
+  // publicados (AWGS 2019, EWGSOP2) são definidos sobre massa muscular
+  // *apendicular*, a dos quatro membros, enquanto `MuscleMass` aqui é massa
+  // muscular total. Total é bem maior que apendicular, então aplicar o corte
+  // classificaria quase todo mundo como normal. Enquanto não houver fonte
+  // conferida com corte sobre massa total, o valor serve para acompanhar a
+  // própria evolução, não para dizer se está alto ou baixo.
+  {
+    calculate: (v, ctx) => {
+      const muscleKg = v.get('MuscleMass')!;
+      const heightM = ctx.heightCm! / 100;
+      return muscleKg / (heightM * heightM);
+    },
+    canCalculate: (ctx) =>
+      typeof ctx.heightCm === 'number' && ctx.heightCm >= 50 && ctx.heightCm <= 250,
+    code: 'MuscleMassIndex',
+    inputs: ['MuscleMass'],
+    unit: 'kg/m2',
+    validate: (v) => v.get('MuscleMass')! > 0,
+  },
 ];
 
 /**

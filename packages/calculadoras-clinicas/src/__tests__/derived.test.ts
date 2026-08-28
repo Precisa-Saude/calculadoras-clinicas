@@ -78,6 +78,35 @@ describe('computeDerivedBiomarkers', () => {
     });
   });
 
+  describe('MuscleMassIndex', () => {
+    it('should calculate the index from MuscleMass and user height', () => {
+      const biomarkers: BiomarkerInput[] = [{ code: 'MuscleMass', value: 24.1 }];
+      const derived = computeDerivedBiomarkers(biomarkers, {
+        userContext: { heightCm: 165 },
+      });
+      const smi = derived.find((b) => b.code === 'MuscleMassIndex');
+
+      expect(smi).toBeDefined();
+      // 24.1 / (1.65)^2 ≈ 8.85
+      expect(smi!.value).toBeCloseTo(8.85, 1);
+      expect(smi!.unit).toBe('kg/m2');
+    });
+
+    it('should not calculate the index without user height', () => {
+      const biomarkers: BiomarkerInput[] = [{ code: 'MuscleMass', value: 24.1 }];
+      const derived = computeDerivedBiomarkers(biomarkers);
+      expect(derived.find((b) => b.code === 'MuscleMassIndex')).toBeUndefined();
+    });
+
+    it('should not calculate the index with implausible height', () => {
+      const biomarkers: BiomarkerInput[] = [{ code: 'MuscleMass', value: 24.1 }];
+      const derived = computeDerivedBiomarkers(biomarkers, {
+        userContext: { heightCm: 10 },
+      });
+      expect(derived.find((b) => b.code === 'MuscleMassIndex')).toBeUndefined();
+    });
+  });
+
   describe('BMI', () => {
     it('should calculate BMI from TotalMass and user height', () => {
       const biomarkers: BiomarkerInput[] = [{ code: 'TotalMass', value: 80 }];
