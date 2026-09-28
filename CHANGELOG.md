@@ -1,3 +1,17 @@
+## [1.2.0](https://github.com/Precisa-Saude/calculadoras-clinicas/compare/v1.1.0...v1.2.0) (2026-09-28)
+
+### Features
+
+* **calculadoras:** derivados devolvem as entradas de que saíram ([#13](https://github.com/Precisa-Saude/calculadoras-clinicas/issues/13)) ([73ba0eb](https://github.com/Precisa-Saude/calculadoras-clinicas/commit/73ba0ebda294bd0290c0d5be15257def0dd5aa4e))
+
+### Bug Fixes
+
+* quebra volta a gerar versão maior ([#12](https://github.com/Precisa-Saude/calculadoras-clinicas/issues/12)) ([ac3f4fc](https://github.com/Precisa-Saude/calculadoras-clinicas/commit/ac3f4fcab4c4e2c683a6510694d986037c8a2866))
+
+### CI/CD
+
+* sincroniza template de review-dispatch (pr_number como number) ([#11](https://github.com/Precisa-Saude/calculadoras-clinicas/issues/11)) ([dc05483](https://github.com/Precisa-Saude/calculadoras-clinicas/commit/dc05483cd9f5933b94f14719f2d81c27f2eaf99f))
+
 ## [1.1.0](https://github.com/Precisa-Saude/calculadoras-clinicas/compare/v1.0.1...v1.1.0) (2026-08-28)
 
 ### Features
