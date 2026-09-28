@@ -215,4 +215,34 @@ describe('computeDerivedBiomarkers', () => {
       expect(derived.find((b) => b.code === 'HOMA_IR')).toBeUndefined();
     });
   });
+
+  // Quem publica o valor precisa dizer de onde ele saiu (`derivedFrom` no FHIR).
+  describe('entradas', () => {
+    it('devolve os códigos de que cada valor saiu, na ordem da fórmula', () => {
+      const derived = computeDerivedBiomarkers([
+        { code: 'Insulin', value: 10 },
+        { code: 'Glucose', value: 90 },
+        { code: 'Triglycerides', value: 150 },
+      ]);
+
+      expect(derived.find((b) => b.code === 'HOMA_IR')?.inputs).toEqual(['Glucose', 'Insulin']);
+      expect(derived.find((b) => b.code === 'VLDL')?.inputs).toEqual(['Triglycerides']);
+    });
+
+    it('não lista o contexto do usuário, que não é marcador do laudo', () => {
+      const derived = computeDerivedBiomarkers([{ code: 'TotalMass', value: 80 }], {
+        userContext: { heightCm: 175 },
+      });
+
+      expect(derived.find((b) => b.code === 'BMI')?.inputs).toEqual(['TotalMass']);
+    });
+
+    it('devolve uma cópia, e não a lista da fórmula', () => {
+      const [first] = computeDerivedBiomarkers([{ code: 'HbA1c', value: 5.4 }]);
+      first!.inputs.push('mexido');
+
+      const [second] = computeDerivedBiomarkers([{ code: 'HbA1c', value: 5.4 }]);
+      expect(second!.inputs).toEqual(['HbA1c']);
+    });
+  });
 });

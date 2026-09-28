@@ -21,6 +21,15 @@ export interface BiomarkerInput {
 
 export interface DerivedBiomarker {
   code: string;
+  /**
+   * Os códigos dos marcadores de que o valor saiu, na ordem da fórmula.
+   *
+   * Quem publica o valor precisa dizer de onde ele veio: no FHIR isso é o
+   * `Observation.derivedFrom`, e sem a lista o consumidor só sabe que o valor
+   * foi calculado, e não a partir de quê. Contexto do usuário, como a altura,
+   * não entra: não é marcador do laudo.
+   */
+  inputs: string[];
   loincCode?: string;
   name: string;
   unit: string;
@@ -158,6 +167,7 @@ export function computeDerivedBiomarkers(
 
     added.push({
       code: calc.code,
+      inputs: [...calc.inputs],
       loincCode: loinc ?? undefined,
       name: calc.code,
       unit: calc.unit,
@@ -192,6 +202,7 @@ export function computeDerivedBiomarkers(
 
       added.push({
         code: calc.code,
+        inputs: [...calc.inputs],
         loincCode: loinc ?? undefined,
         name: calc.code,
         unit: calc.unit,

@@ -37,8 +37,10 @@ const pheno = phenoage.calculatePhenoAge({ chronologicalAge: 45 /* ...biomarcado
 // Risco de diabetes
 const model = brdmrisc.selectModel({ fpg: 90, hba1c: 5.5 });
 
-// Biomarcadores derivados (HOMA-IR, VLDL, eAG, IMC)
+// Biomarcadores derivados (HOMA-IR, VLDL, eAG, IMC). Cada um traz em `inputs`
+// os códigos de que saiu, para quem publica dizer de onde veio o valor.
 const derived = computeDerivedBiomarkers([{ code: 'Triglycerides', value: 150 }]);
+// → [{ code: 'VLDL', inputs: ['Triglycerides'], value: 30, ... }]
 
 // Índices clínicos
 const fib4 = indices.CALCULATOR_REGISTRY.find((c) => c.id === 'fib4');
