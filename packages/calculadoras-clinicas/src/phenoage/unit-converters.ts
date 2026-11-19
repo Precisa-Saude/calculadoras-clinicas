@@ -98,26 +98,19 @@ export const convertToSI = (biomarker: string, value: number, sourceUnit: string
   const exact = table.get(canonical);
   if (exact !== undefined) return value * exact;
 
-  // Unidade com prefixo de grandeza que a forma canônica não reconheceu não
-  // passa pela busca parcial: ela acharia o `/ul` dentro dela e erraria por
-  // mil. O erro devolve a decisão ao `autoConvertToSI`, que usa a faixa do valor.
-  if (MAGNITUDE.test(canonical)) {
-    throw new Error(`Unknown unit "${sourceUnit}" for ${biomarker}`);
-  }
-
-  // For partial matches, prefer the longest key to pick the most specific one
-  // ("10³/µL" before "/µL").
+  // Busca parcial só com a chave no começo da unidade: sobra texto depois
+  // dela (um rótulo), e nada antes. Qualquer coisa antes da chave é prefixo de
+  // grandeza (`M/µL`, `G/µL`, `10^6/µL`), e casar o `/ul` de dentro dela erraria
+  // por mil ou mais em silêncio. Sem par, o erro devolve a decisão ao
+  // `autoConvertToSI`, que usa a faixa do valor.
   const partial = [...table.keys()]
     .filter((key) => key.length > 1)
     .sort((a, b) => b.length - a.length)
-    .find((key) => canonical.includes(key));
+    .find((key) => canonical.startsWith(key));
   if (partial !== undefined) return value * table.get(partial)!;
 
   throw new Error(`Unknown unit "${sourceUnit}" for ${biomarker}`);
 };
-
-/** Prefixo de grandeza que sobrou depois da forma canônica. */
-const MAGNITUDE = /\d|thousand|mil\b|^k/;
 
 /**
  * A grafia de comparação de uma unidade: minúscula, sem espaço, `µ` como `u`,

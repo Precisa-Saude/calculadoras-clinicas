@@ -346,8 +346,16 @@ describe('leucócitos em grafias de milhar', () => {
 
 describe('unidade que a forma canônica não reconhece', () => {
   // Com prefixo de grandeza, a busca parcial acharia o `/ul` e erraria por mil.
-  it('com prefixo de grandeza, convertToSI recusa em vez de adivinhar', () => {
-    expect(() => convertToSI('wbc', 5.3, '10^6/uL')).toThrow(/Unknown unit/);
+  it.each(['10^6/uL', 'M/µL', 'G/µL'])(
+    'com prefixo de grandeza (%s), convertToSI recusa em vez de adivinhar',
+    (unit) => {
+      expect(() => convertToSI('wbc', 5.3, unit)).toThrow(/Unknown unit/);
+    },
+  );
+
+  it('rótulo depois da unidade ainda casa com a chave', () => {
+    expect(convertToSI('wbc', 5.3, 'K/uL (leucócitos)')).toBeCloseTo(5.3, 6);
+    expect(convertToSI('albumin', 4.4, 'g/dL soro')).toBeCloseTo(44, 6);
   });
 
   it('e o autoConvertToSI decide pela faixa do valor', () => {
