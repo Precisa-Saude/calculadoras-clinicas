@@ -329,6 +329,11 @@ describe('leucócitos em grafias de milhar', () => {
     'x10^3/uL',
     'K/µL',
     'mil/mm³',
+    '10E3/uL',
+    'x10E3/uL',
+    'Thousands/uL',
+    'Thousand cells/uL',
+    '10^3 cells/uL',
   ])('%s fica em 10^9/L sem mudar o número', (unit) => {
     expect(convertToSI('wbc', 5.3, unit)).toBeCloseTo(5.3, 6);
     expect(autoConvertToSI('wbc', 5.3, unit).value).toBeCloseTo(5.3, 6);
@@ -336,5 +341,29 @@ describe('leucócitos em grafias de milhar', () => {
 
   it.each(['/uL', '/µL', '/mm³', 'cells/uL'])('%s é contagem por µL e divide por mil', (unit) => {
     expect(autoConvertToSI('wbc', 6500, unit).value).toBeCloseTo(6.5, 6);
+  });
+});
+
+describe('unidade que a forma canônica não reconhece', () => {
+  // Com prefixo de grandeza, a busca parcial acharia o `/ul` e erraria por mil.
+  it('com prefixo de grandeza, convertToSI recusa em vez de adivinhar', () => {
+    expect(() => convertToSI('wbc', 5.3, '10^6/uL')).toThrow(/Unknown unit/);
+  });
+
+  it('e o autoConvertToSI decide pela faixa do valor', () => {
+    expect(autoConvertToSI('wbc', 5.3, '10^6/uL').value).toBeCloseTo(5.3, 6);
+    expect(autoConvertToSI('wbc', 6500, '10^6/uL').value).toBeCloseTo(6.5, 6);
+  });
+});
+
+// A forma canônica vale para todos os biomarcadores, e não só para leucócitos.
+describe('todas as unidades da tabela pela forma canônica', () => {
+  const cases = Object.entries(CONVERSION_FACTORS).flatMap(([biomarker, factors]) =>
+    Object.entries(factors).map(([unit, factor]) => ({ biomarker, factor, unit })),
+  );
+
+  it.each(cases)('$biomarker em $unit', ({ biomarker, factor, unit }) => {
+    expect(convertToSI(biomarker, 2, unit)).toBeCloseTo(2 * factor, 9);
+    expect(convertToSI(biomarker, 2, ` ${unit.toUpperCase()} `)).toBeCloseTo(2 * factor, 9);
   });
 });
