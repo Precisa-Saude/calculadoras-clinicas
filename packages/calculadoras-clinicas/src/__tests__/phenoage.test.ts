@@ -315,3 +315,26 @@ describe('unit converters', () => {
     expect(convertToSI('wbc', 6.5, 'Thousand/uL')).toBe(6.5);
   });
 });
+
+// Leucócitos gravados como `Thousand /uL` (com espaço) caíam na busca parcial
+// por `/uL`, o fator das células por µL: 5,3 virava 0,0053, a validação
+// recusava o período e o histórico do PhenoAge sumia (18/11/2026).
+describe('leucócitos em grafias de milhar', () => {
+  it.each([
+    'Thousand /uL',
+    'thousand / µL',
+    '10^3/uL',
+    '10³/µL',
+    '·10³/µl',
+    'x10^3/uL',
+    'K/µL',
+    'mil/mm³',
+  ])('%s fica em 10^9/L sem mudar o número', (unit) => {
+    expect(convertToSI('wbc', 5.3, unit)).toBeCloseTo(5.3, 6);
+    expect(autoConvertToSI('wbc', 5.3, unit).value).toBeCloseTo(5.3, 6);
+  });
+
+  it.each(['/uL', '/µL', '/mm³', 'cells/uL'])('%s é contagem por µL e divide por mil', (unit) => {
+    expect(autoConvertToSI('wbc', 6500, unit).value).toBeCloseTo(6.5, 6);
+  });
+});

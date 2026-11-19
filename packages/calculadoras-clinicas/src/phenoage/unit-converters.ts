@@ -88,30 +88,43 @@ export const convertToSI = (biomarker: string, value: number, sourceUnit: string
   // Normalize unit string for matching
   const normalizedUnit = sourceUnit.trim();
   const factor = factors[normalizedUnit];
+  if (factor !== undefined) return value * factor;
 
-  if (factor === undefined) {
-    const normalizedLower = normalizedUnit.toLowerCase();
-
-    // First try exact case-insensitive match
-    const exactMatch = Object.keys(factors).find((key) => key.toLowerCase() === normalizedLower);
-    if (exactMatch) {
-      return value * factors[exactMatch]!;
-    }
-
-    // For partial matches, sort keys by length (longest first) to prefer more specific matches
-    // This prevents "/µL" from matching before "10³/µL"
-    const sortedKeys = Object.keys(factors).sort((a, b) => b.length - a.length);
-    const partialMatch = sortedKeys.find((key) => normalizedLower.includes(key.toLowerCase()));
-
-    if (partialMatch) {
-      return value * factors[partialMatch]!;
-    }
-
-    throw new Error(`Unknown unit "${sourceUnit}" for ${biomarker}`);
+  // Comparação pela forma canônica: sem espaço nem caixa, µ como u, e os
+  // prefixos de milhar (`Thousand`, `10^3`, `10³`, `mil`, `K`) como um só.
+  // Sem isso, `Thousand /uL` e `10^3/uL` caíam na busca parcial por `/uL`, o
+  // fator das células por µL, e 5,3 virava 0,0053.
+  const canonical = canonicalUnit(normalizedUnit);
+  const exactMatch = Object.keys(factors).find((key) => canonicalUnit(key) === canonical);
+  if (exactMatch) {
+    return value * factors[exactMatch]!;
   }
 
-  return value * factor;
+  // For partial matches, sort keys by length (longest first) to prefer more specific matches
+  // This prevents "/µL" from matching before "10³/µL"
+  const sortedKeys = Object.keys(factors).sort((a, b) => b.length - a.length);
+  const partialMatch = sortedKeys.find((key) => canonical.includes(canonicalUnit(key)));
+
+  if (partialMatch) {
+    return value * factors[partialMatch]!;
+  }
+
+  throw new Error(`Unknown unit "${sourceUnit}" for ${biomarker}`);
 };
+
+/**
+ * A grafia de comparação de uma unidade: minúscula, sem espaço, `µ` como `u`,
+ * `mm³` como `ul` (1 mm³ é 1 µL) e os prefixos de milhar como `k`.
+ */
+const canonicalUnit = (unit: string): string =>
+  unit
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[µμ]/g, 'u')
+    .replace(/^[·x×*]/, '')
+    .replace(/³/g, '^3')
+    .replace(/^(?:10\^3|10\*3|1000|thousand|mil|k)(?=\/)/, 'k')
+    .replace(/mm\^?3$/, 'ul');
 
 /**
  * Check if a value needs conversion
