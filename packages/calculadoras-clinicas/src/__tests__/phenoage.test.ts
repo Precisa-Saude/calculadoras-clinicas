@@ -315,3 +315,63 @@ describe('unit converters', () => {
     expect(convertToSI('wbc', 6.5, 'Thousand/uL')).toBe(6.5);
   });
 });
+
+// Leucócitos gravados como `Thousand /uL` (com espaço) caíam na busca parcial
+// por `/uL`, o fator das células por µL: 5,3 virava 0,0053, a validação
+// recusava o período e o histórico do PhenoAge sumia (18/11/2026).
+describe('leucócitos em grafias de milhar', () => {
+  it.each([
+    'Thousand /uL',
+    'thousand / µL',
+    '10^3/uL',
+    '10³/µL',
+    '·10³/µl',
+    'x10^3/uL',
+    'K/µL',
+    'mil/mm³',
+    '10E3/uL',
+    'x10E3/uL',
+    'Thousands/uL',
+    'Thousand cells/uL',
+    '10^3 cells/uL',
+  ])('%s fica em 10^9/L sem mudar o número', (unit) => {
+    expect(convertToSI('wbc', 5.3, unit)).toBeCloseTo(5.3, 6);
+    expect(autoConvertToSI('wbc', 5.3, unit).value).toBeCloseTo(5.3, 6);
+  });
+
+  it.each(['/uL', '/µL', '/mm³', 'cells/uL'])('%s é contagem por µL e divide por mil', (unit) => {
+    expect(autoConvertToSI('wbc', 6500, unit).value).toBeCloseTo(6.5, 6);
+  });
+});
+
+describe('unidade que a forma canônica não reconhece', () => {
+  // Com prefixo de grandeza, a busca parcial acharia o `/ul` e erraria por mil.
+  it.each(['10^6/uL', 'M/µL', 'G/µL'])(
+    'com prefixo de grandeza (%s), convertToSI recusa em vez de adivinhar',
+    (unit) => {
+      expect(() => convertToSI('wbc', 5.3, unit)).toThrow(/Unknown unit/);
+    },
+  );
+
+  it('rótulo depois da unidade ainda casa com a chave', () => {
+    expect(convertToSI('wbc', 5.3, 'K/uL (leucócitos)')).toBeCloseTo(5.3, 6);
+    expect(convertToSI('albumin', 4.4, 'g/dL soro')).toBeCloseTo(44, 6);
+  });
+
+  it('e o autoConvertToSI decide pela faixa do valor', () => {
+    expect(autoConvertToSI('wbc', 5.3, '10^6/uL').value).toBeCloseTo(5.3, 6);
+    expect(autoConvertToSI('wbc', 6500, '10^6/uL').value).toBeCloseTo(6.5, 6);
+  });
+});
+
+// A forma canônica vale para todos os biomarcadores, e não só para leucócitos.
+describe('todas as unidades da tabela pela forma canônica', () => {
+  const cases = Object.entries(CONVERSION_FACTORS).flatMap(([biomarker, factors]) =>
+    Object.entries(factors).map(([unit, factor]) => ({ biomarker, factor, unit })),
+  );
+
+  it.each(cases)('$biomarker em $unit', ({ biomarker, factor, unit }) => {
+    expect(convertToSI(biomarker, 2, unit)).toBeCloseTo(2 * factor, 9);
+    expect(convertToSI(biomarker, 2, ` ${unit.toUpperCase()} `)).toBeCloseTo(2 * factor, 9);
+  });
+});

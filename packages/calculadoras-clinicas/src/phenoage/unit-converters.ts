@@ -88,29 +88,71 @@ export const convertToSI = (biomarker: string, value: number, sourceUnit: string
   // Normalize unit string for matching
   const normalizedUnit = sourceUnit.trim();
   const factor = factors[normalizedUnit];
+  if (factor !== undefined) return value * factor;
 
-  if (factor === undefined) {
-    const normalizedLower = normalizedUnit.toLowerCase();
+  // Comparação pela forma canônica (ver `canonicalUnit`). Sem isso,
+  // `Thousand /uL` e `10^3/uL` caíam na busca parcial por `/uL`, o fator das
+  // células por µL, e 5,3 virava 0,0053.
+  const canonical = canonicalUnit(normalizedUnit);
+  const table = canonicalFactors(biomarker, factors);
+  const exact = table.get(canonical);
+  if (exact !== undefined) return value * exact;
 
-    // First try exact case-insensitive match
-    const exactMatch = Object.keys(factors).find((key) => key.toLowerCase() === normalizedLower);
-    if (exactMatch) {
-      return value * factors[exactMatch]!;
+  // Busca parcial só com a chave no começo da unidade: sobra texto depois
+  // dela (um rótulo), e nada antes. Qualquer coisa antes da chave é prefixo de
+  // grandeza (`M/µL`, `G/µL`, `10^6/µL`), e casar o `/ul` de dentro dela erraria
+  // por mil ou mais em silêncio. Sem par, o erro devolve a decisão ao
+  // `autoConvertToSI`, que usa a faixa do valor.
+  const partial = [...table.keys()]
+    .filter((key) => key.length > 1)
+    .sort((a, b) => b.length - a.length)
+    .find((key) => canonical.startsWith(key));
+  if (partial !== undefined) return value * table.get(partial)!;
+
+  throw new Error(`Unknown unit "${sourceUnit}" for ${biomarker}`);
+};
+
+/**
+ * A grafia de comparação de uma unidade: minúscula, sem espaço, `µ` como `u`,
+ * sem a palavra `cells`/`células`, `mm³` como `ul` (1 mm³ é 1 µL) e os
+ * prefixos de milhar (`Thousand(s)`, `10^3`, `10³`, `10E3`, `1000`, `mil`, `K`)
+ * como `k`.
+ */
+const canonicalUnit = (unit: string): string =>
+  unit
+    .toLowerCase()
+    .replace(/c[eé]lulas?|cells?/g, '')
+    .replace(/\s+/g, '')
+    .replace(/[µμ]/g, 'u')
+    .replace(/^[·x×*]/, '')
+    .replace(/³/g, '^3')
+    .replace(/^(?:10(?:\^|\*\*|\*|e)3|1000|thousands?|mil|k)(?=\/)/, 'k')
+    .replace(/mm\^?3$/, 'ul');
+
+const canonicalCache = new Map<string, Map<string, number>>();
+
+/**
+ * A tabela de um biomarcador pela forma canônica, montada uma vez. Duas
+ * grafias com a mesma forma e fatores diferentes são erro da tabela, e não
+ * escolha de quem chega primeiro.
+ */
+const canonicalFactors = (
+  biomarker: string,
+  factors: Record<string, number>,
+): Map<string, number> => {
+  const cached = canonicalCache.get(biomarker);
+  if (cached) return cached;
+  const table = new Map<string, number>();
+  for (const [unit, factor] of Object.entries(factors)) {
+    const key = canonicalUnit(unit);
+    const previous = table.get(key);
+    if (previous !== undefined && previous !== factor) {
+      throw new Error(`Conflicting factors for "${key}" in ${biomarker}`);
     }
-
-    // For partial matches, sort keys by length (longest first) to prefer more specific matches
-    // This prevents "/µL" from matching before "10³/µL"
-    const sortedKeys = Object.keys(factors).sort((a, b) => b.length - a.length);
-    const partialMatch = sortedKeys.find((key) => normalizedLower.includes(key.toLowerCase()));
-
-    if (partialMatch) {
-      return value * factors[partialMatch]!;
-    }
-
-    throw new Error(`Unknown unit "${sourceUnit}" for ${biomarker}`);
+    table.set(key, factor);
   }
-
-  return value * factor;
+  canonicalCache.set(biomarker, table);
+  return table;
 };
 
 /**
