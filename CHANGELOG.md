@@ -1,3 +1,15 @@
+## [1.2.1](https://github.com/Precisa-Saude/calculadoras-clinicas/compare/v1.2.0...v1.2.1) (2026-11-19)
+
+### Bug Fixes
+
+* **calculadoras:** leucócitos em grafia de milhar não viram contagem por µL ([#17](https://github.com/Precisa-Saude/calculadoras-clinicas/issues/17)) ([a5992ad](https://github.com/Precisa-Saude/calculadoras-clinicas/commit/a5992adcee7f5b0170660800cb16b6e6b5c6ab4c))
+
+### CI/CD
+
+* adotar tooling v3 versionado com política de revisão ([#14](https://github.com/Precisa-Saude/calculadoras-clinicas/issues/14)) ([180e4bc](https://github.com/Precisa-Saude/calculadoras-clinicas/commit/180e4bc81957bd1e288630037befd325e54befa2))
+* ativa a revisão automática dos PRs ([#16](https://github.com/Precisa-Saude/calculadoras-clinicas/issues/16)) ([cbb8110](https://github.com/Precisa-Saude/calculadoras-clinicas/commit/cbb81102f967c0556a85e99479e8b7cd838579a2))
+* definir política explícita para revisão externa ([#15](https://github.com/Precisa-Saude/calculadoras-clinicas/issues/15)) ([c3c21c7](https://github.com/Precisa-Saude/calculadoras-clinicas/commit/c3c21c7152c860e60513223adf6f2ba8f2c017c5))
+
 ## [1.2.0](https://github.com/Precisa-Saude/calculadoras-clinicas/compare/v1.1.0...v1.2.0) (2026-09-28)
 
 ### Features
